@@ -1,191 +1,67 @@
 ![General Assembly Logo](http://i.imgur.com/ke8USTq.png)
 
-# Ember Routing Basics
+# Ember Views
 
 ## Lesson Details
 ### Foundations
 At this point, students have already learned how to:
 
-- Generate a new Ember application using `ember new`
-- Configure an Ember application to use Ember 2 (instead of Ember 1) and a pod structure for files.
-- Name and describe the different parts of an Ember application.
+- Create a new Template using `ember g`
+- Configure the Ember Router to point to a new Template.
+- Create nested Views and route to them appropriately.
 
 ### Objectives
 By the end of this lesson, students should be able to:
 
-- Create a new Template using `ember g`.
-- Configure the Ember Router to point to a new Template.
-- Use the `{{#link-to}}` helper to link from one Template to another Template.
-- Create nested Views and route to them appropriately.
-- Set up an 'index' Template.
+- Create and initialize a new Ember View.
+- Use an Ember View to handle events triggered within a routable template.
 
-## Routing to Templates
-Fork and clone this repo, and run `npm install && bower install`; then run `ember serve` to launch this application, and open your browser to `http://localhost:4200`.
+## Ember Views
+Ember Views are objects that represent the UI element described in detail by a Template. Ember 2 does not officially support Views at all (and, in fact, has completely eliminated `Ember.View`), seeking to replace them with Components. However, because Components are not yet routable, a routed Template cannot sit inside a Component (though it can contain Components); consequently, any events that happen in that template _cannot be caught_ by event handlers in a Component. Thus, at least in the scope of this course, we will continue to teach Views for the very limited use case of catching events that don't occur within Components.
 
-When you do, you should see a page that looks like this:
+In order to address this use case, and to generally ease the transition from Views to Components, the Ember team has released an [add-on](https://github.com/emberjs/ember-legacy-views) for Ember 2 that allows it to support `Ember.View` for a little while longer. This add-on can be downloaded by running the command `ember install ember-legacy-views`
 
-!['application' View](./readme-assets/application.png)
+Let's look at a simple example of how an Ember View can be applied to an existing page to add some simple behavior.
 
-As you may recall from the Overview lesson, the content for this default View, 'application', is determined by `app/application/template.hbs`. Let's look inside that file for a moment.
+Consider our application from the previous lesson, on routing. What if we wanted something to happen while on the 'about' page whenever we clicked?
 
-```html
-<h1> Welcome to Ember! </h1>
+Given that the templates already exist, all we would need to do is
+1. Generate a new View to go along with the 'about' Template, by running the command `ember g view about`. This will create a new file called `view.js` inside the `app/about` directory.
 
-{{outlet}}
-```
-
-What exactly is `{{outlet}}`? We've talked about how Ember Views can be nested within each other like a tree, just like the URLs that map to them - `{{outlet}}` is a placeholder for any Views that might be nested inside the 'application' View.
-
-Let's create one of those new Views and see how it works. Run the command `ember g template about` in the console; it should create a new directory `app/about`, with a file inside it called `template.hbs`. Let's write some new HTML into that file:
-
-```HTML
-<h3> About This App </h3>
-
-<p> This application is a demonstration of how Ember routing works. </p>
-```
-
-To let our application know what URL this View corresponds to, we need to add it to the Ember Router.
-
+2. Inside the new `view.js` file, define a method called `click` that does something, such as printing text out to the console.
 ```javascript
-Router.map(function() {
-  this.route('about');
+import Ember from 'ember';
+
+var i = 0;
+
+export default Ember.View.extend({
+  click: function(event){
+    i += 1;
+    console.log("I've been clicked " + i + " time(s).");
+  }
 });
 ```
 
-Having made this change, if we navigate to `http://localhost:4200/about` we should see the following.
+That's it! You've now set an event handler in a View.
 
-!['about' View](./readme-assets/about.png)
+There are many different kinds of events that can be handled in Ember. Here's a list of most of the events that you'll come across:
 
-** WAIT!! Don't we need a Route, Controller, View, etc in order to be able to show that 'about' View? **
-Yes, we do! However, this is an example of Ember making things simpler for us. By default, _defining a new route in the Router will create all of the other objects for you_, and as a result, _the only time when you actually create any of those objects (by making your own files) is when you want to override the defaults_. It's amazing, and it lets you move very quickly when developing an Ember application.
+**Mouse Events**
+* `mouseUp` / `mouseDown`
+* `click` / `doubleClick`
+* `mouseMove` / `mouseEnter` / `mouseLeave`
 
-In this case, although we've only explicitly defined the Template, all of the other objects have been created in the background. This is easily verified using the Ember Inspector.
+**Keyboard Events**
+* `keyUp` / `keyDown` / `keyPress`
 
-!['about' View, inspected](./readme-assets/about-inspected.png)
+**Form Events**
+* `submit`
+* `change`
+* `focusIn` / `focusOut`
 
-As you can see, even though we didn't create them, there exist a Route, a Controller, and a View that are tied in to the template we've just created.
+There are also some more obscure events, like those related to drag & drop, or responding to 'touch' triggers from mobile devices.
 
-Let's go back to the main page - we can do this by using the "back" button. Suppose that a user were to come to our site, and want to see the About page. They could type in the URL manually, but that assumes that they know that the `/about` route exists. It's also really bad UI. What would be nice is if we could have a link pointing from our main page to our About page.
-
-To that end, Ember provides us with a Handlebars helper called `{{#link-to}}` that allows us to create links from one route to another.
-```HTML
-<nav>
-  {{#link-to 'about'}}About{{/link-to}}
-</nav>
-```
-This helper will generate an `<a>` tag inside our rendered HTML which loads the About page.
-
-While we're at it, let's add another link back to the main page, so we can get back.
-```HTML
-<nav>
-  {{#link-to 'application'}}Home{{/link-to}}
-  {{#link-to 'about'}}About{{/link-to}}
-</nav>
-```
-
-Now we can navigate back and forth between the two templates with ease!
-
-### YOUR TURN : Routing to Templates
-Create two more pages, 'Team' and 'Contact', that feature the following content:
-**Team**
-```HTML
-<h3> Our Team </h3>
-
-<p> Our team is composed of the best folks around. </p>
-```
-**Contact**
-```HTML
-<h3> Contact </h3>
-
-<p>
-  We can be found at: <br />
-  1 Fake Street<br />
-  NotRealsVille, MA, 00000
-</p>
-```
-Set up routes that point to these templates, and add links to these pages from the main page.
-
-## Nested Templates
-Suppose that we wanted to nest some more templates inside the Team page - for instance, pages for Leadership, Engineering, and Sales - and have it be possible to route to any of them.
-
-When we wanted to route to 'about', 'team', and 'contact', we needed to have an `{{outlet}}` in the 'application' Template; if we put another `{{outlet}}` helper in the 'team' Template, we can load other, more deeply-nested templates into that Template.
-```HTML
-**Team**
-```HTML
-<h3> Our Team </h3>
-
-<p> Our team is composed of the best folks around. </p>
-
-{{outlet}}
-```
-
-However, nested Templates require nested routes - URLs for these routes will need to have the format `/team/engineering`, `/team/leadership`, etc. How can we set this up?
-
-If we go into the Ember Router, we can specify that routes are nested by passing in a function as a second argument to `this.route` and defining new routes within that function's body.
-i.e.
-```javascript
-Router.map(function() {
-  this.route('about');
-  this.route('contact');
-  this.route('team', function(){
-    this.route('engineering');
-    this.route('leadership');
-  });
-});
-```
-
-Next, we need to set up our Templates. The appropriate syntax to use in the generator is `ember g template team/something` - this will let ember-cli know to create a `something` directory (containing a Template file) inside `app/team`, much like how the `team` directory is nested within `app`.
-
-Here's some content we can use for each of those nested templates.
-> The `{{#link-to}}` helpers referring back to the 'team' Template are not strictly necessary, but are nice for UI reasons.
-
-**team/leadership**
-```HTML
-<h5>Leadership Team</h5>
-<ul>
-  <li>Person One</li>
-  <li>Person Two</li>
-  <li>Person Three</li>
-</ul>
-{{#link-to 'team'}}Back{{/link-to}}
-```
-
-**team/engineering**
-```HTML
-<h5>Engineering Team</h5>
-<ul>
-  <li>Person Four</li>
-  <li>Person Five</li>
-  <li>Person Six</li>
-</ul>
-{{#link-to 'team'}}Back{{/link-to}}
-```
-
-Finally, let's add some `{{#link-to}}` helpers to the 'team' Template which direct us to either team. With that done, we can easily navigate back and forth between looking at either team. The way to refer to a nested route in 'string form' is to separate each level of nesting with a `.`
-> If you ever forget the route to a particular Template, you can always check the Ember Inspector!
-
-```HTML
-<h3> Our Team </h3>
-
-<p> Our team is composed of the best folks around. </p>
-
-{{#link-to 'team/leadership'}}Leadership{{/link-to}}
-{{#link-to 'team/engineering'}}Engineering{{/link-to}}
-
-{{outlet}}
-```
-
-### Index Templates
-Ordinarily, if we're looking at a page like 'team', the `{{outlet}}` helper doesn't have any content in it. But what if we wanted to have something show up there _only when no nested templates have been loaded_,  e.g. 'Click a team to learn more.'?
-
-This use case is handled by a special kind of nested Template called an 'index'. Setting it up is almost the same as setting up any other kind of nested Template, the only difference being that it maps to `.../` instead of `.../somepath`.
-We also don't need to modify the Router at all - it pre-defines an 'index' route for every Template that has an `{{outlet}}`.
-
-### YOUR TURN : Nested Templates
-Change the 'contact' template to load one of two nested templates: 'boston' and 'nyc'. Each of these templates should have a different (fake) address visible. When neither template is loaded, the 'contact' page should show the content below:
-```HTML
-<p> Please select a location for contact details. </p>
-```
+Handlers for all of these events (and more) can be set in Views _or in Components_, so keep this lesson handy for when we cover Ember Components - that's where we'll be doing the majority of our event handling.
 
 ## Additional Resources
-- [Ember Guides](http://guides.emberjs.com/v2.2.0/routing/)
+- [Ember 2.0 Release Notes](http://emberjs.com/blog/2015/08/13/ember-2-0-released.html) - contains some info about preserving functionality of applications with top-level Views.
